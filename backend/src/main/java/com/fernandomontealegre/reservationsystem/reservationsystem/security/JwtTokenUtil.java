@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenUtil {
 
-    private String secret = "b1O5IziUvD86ZY504B59Ra0L/oT1wwEKNBJ/BOwkdo7W4+ZWr/EHD/ShH6u3C7QLLROQb2yQtFq1KgxqV4NJ9g=="; // Reemplaza por la clave generada en Base64 con KeyGenerator
+    private String secret = ""; // Reemplaza por la clave generada en Base64 con KeyGenerator
 
     // Validez del token en milisegundos (5 horas)
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
