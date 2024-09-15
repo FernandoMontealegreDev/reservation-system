@@ -2,6 +2,9 @@ package com.fernandomontealegre.reservationsystem.reservationsystem.controller;
 
 import com.fernandomontealegre.reservationsystem.reservationsystem.model.Service;
 import com.fernandomontealegre.reservationsystem.reservationsystem.repository.ServiceRepository;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +32,13 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<Service> createService(@RequestBody Service service) {
+    public ResponseEntity<Service> createService(@Valid @RequestBody Service service) {
         Service savedService = serviceRepository.save(service);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedService);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Service> updateService(@PathVariable Long id, @RequestBody Service serviceDetails) {
+    public ResponseEntity<Service> updateService(@PathVariable Long id, @Valid @RequestBody Service serviceDetails) {
         return serviceRepository.findById(id)
                 .map(service -> {
                     service.setName(serviceDetails.getName());
@@ -52,7 +55,7 @@ public class ServiceController {
         return serviceRepository.findById(id)
                 .map(service -> {
                     serviceRepository.delete(service);
-                    return ResponseEntity.noContent().<Void>build(); // Cambiado para especificar el tipo
+                    return ResponseEntity.noContent().<Void>build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

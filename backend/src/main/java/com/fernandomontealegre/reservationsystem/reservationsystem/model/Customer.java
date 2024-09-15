@@ -1,6 +1,7 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -16,12 +17,14 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @NotBlank(message = "El nombre es obligatorio")
     private String name;
     
+    @Email(message = "El correo electrónico debe ser válido")
+    @NotBlank(message = "El correo electrónico es obligatorio")
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @NotBlank(message = "El número de teléfono es obligatorio")
     private String phoneNumber;
 }

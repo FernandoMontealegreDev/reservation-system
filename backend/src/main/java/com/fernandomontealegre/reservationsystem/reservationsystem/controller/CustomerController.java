@@ -1,7 +1,10 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.controller;
 
-import com.fernandomontealegre.reservationsystem.reservationsystem.model.Customer; // Verifica la ruta
+import com.fernandomontealegre.reservationsystem.reservationsystem.model.Customer;
 import com.fernandomontealegre.reservationsystem.reservationsystem.repository.CustomerRepository;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +32,13 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
         Customer savedCustomer = customerRepository.save(customer);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customerDetails) {
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @Valid @RequestBody Customer customerDetails) {
         return customerRepository.findById(id)
                 .map(customer -> {
                     customer.setName(customerDetails.getName());
