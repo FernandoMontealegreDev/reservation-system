@@ -1,20 +1,21 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.controller;
 
-import com.fernandomontealegre.reservationsystem.reservationsystem.model.Customer;
-import com.fernandomontealegre.reservationsystem.reservationsystem.model.Reservation;
-import com.fernandomontealegre.reservationsystem.reservationsystem.model.Service;
-import com.fernandomontealegre.reservationsystem.reservationsystem.repository.CustomerRepository;
-import com.fernandomontealegre.reservationsystem.reservationsystem.repository.ReservationRepository;
-import com.fernandomontealegre.reservationsystem.reservationsystem.repository.ServiceRepository;
+// Importaciones de excepciones, modelos y repositorios
+import com.fernandomontealegre.reservationsystem.reservationsystem.exception.ResourceNotFoundException;
+import com.fernandomontealegre.reservationsystem.reservationsystem.model.*;
+import com.fernandomontealegre.reservationsystem.reservationsystem.repository.*;
 
-import jakarta.validation.Valid;
-
+// Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+// Importaciones de Jakarta Validation y Java
+import jakarta.validation.Valid;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -24,71 +25,123 @@ public class ReservationController {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    private HotelRoomRepository hotelRoomRepository;
 
-    @Autowired
-    private ServiceRepository serviceRepository;
+    // Cliente: Crear una reserva
+    @PreAuthorize("hasRole('CLIENT')")
+    @PostMapping
+    public ResponseEntity<?> createReservation(@Valid @RequestBody Reservation reservation) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        reservation.setUser(user);
 
+        // Validar que la habitación existe
+        HotelRoom room = hotelRoomRepository.findById(reservation.getService().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
+
+        reservation.setService(room);
+        reservation.setStatus("PENDING");
+
+        Reservation savedReservation = reservationRepository.save(reservation);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
+    }
+
+    // Cliente: Ver sus propias reservas
+    @PreAuthorize("hasRole('CLIENT')")
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyReservations() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        List<Reservation> reservations = reservationRepository.findByUserId(user.getId());
+        return ResponseEntity.ok(reservations);
+    }
+
+    // Cliente: Modificar su reserva
+    @PreAuthorize("hasRole('CLIENT')")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateMyReservation(@PathVariable Long id, @Valid @RequestBody Reservation reservationDetails) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
+
+        if (!reservation.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No tiene permiso para modificar esta reserva");
+        }
+
+        // Actualizar los detalles de la reserva
+        reservation.setReservationDateTime(reservationDetails.getReservationDateTime());
+        reservation.setStatus(reservationDetails.getStatus());
+
+        Reservation updatedReservation = reservationRepository.save(reservation);
+        return ResponseEntity.ok(updatedReservation);
+    }
+
+    // Cliente: Cancelar su reserva
+    @PreAuthorize("hasRole('CLIENT')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteMyReservation(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
+
+        if (!reservation.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No tiene permiso para eliminar esta reserva");
+        }
+
+        reservationRepository.delete(reservation);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Admin: Obtener todas las reservas
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
-        return reservationRepository.findById(id)
-                .map(reservation -> ResponseEntity.ok().body(reservation))
-                .orElse(ResponseEntity.notFound().build());
-    }
+    // Admin: Crear una reserva
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin")
+    public ResponseEntity<?> createReservationAdmin(@Valid @RequestBody Reservation reservation) {
+        // Validar que la habitación existe
+        HotelRoom room = hotelRoomRepository.findById(reservation.getService().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
 
-    @PostMapping
-    public ResponseEntity<Reservation> createReservation(@Valid @RequestBody Reservation reservation) {
+        reservation.setService(room);
         Reservation savedReservation = reservationRepository.save(reservation);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
     }
 
-@PutMapping("/{id}")
-public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @Valid @RequestBody Reservation reservationDetails) {
-    return reservationRepository.findById(id)
-            .map(reservation -> {
-                reservation.setReservationDateTime(reservationDetails.getReservationDateTime());
-                reservation.setStatus(reservationDetails.getStatus());
+    // Admin: Actualizar una reserva
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/admin/{id}")
+    public ResponseEntity<?> updateReservationAdmin(@PathVariable Long id, @Valid @RequestBody Reservation reservationDetails) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
 
-                // Validar y obtener IDs de Customer y Service
-                if (reservationDetails.getCustomer() == null || reservationDetails.getCustomer().getId() == null) {
-                    throw new RuntimeException("Customer ID is missing in the request.");
-                }
-                if (reservationDetails.getService() == null || reservationDetails.getService().getId() == null) {
-                    throw new RuntimeException("Service ID is missing in the request.");
-                }
+        // Actualizar los detalles de la reserva
+        reservation.setReservationDateTime(reservationDetails.getReservationDateTime());
+        reservation.setStatus(reservationDetails.getStatus());
+        reservation.setService(reservationDetails.getService());
+        reservation.setUser(reservationDetails.getUser());
 
-                Long customerId = reservationDetails.getCustomer().getId();
-                Long serviceId = reservationDetails.getService().getId();
+        Reservation updatedReservation = reservationRepository.save(reservation);
+        return ResponseEntity.ok(updatedReservation);
+    }
 
-                // Buscar y asignar Customer y Service por sus IDs
-                Customer customer = customerRepository.findById(customerId)
-                        .orElseThrow(() -> new RuntimeException("Customer not found with id " + customerId));
+    // Admin: Eliminar una reserva
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<?> deleteReservationAdmin(@PathVariable Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
 
-                Service service = serviceRepository.findById(serviceId)
-                        .orElseThrow(() -> new RuntimeException("Service not found with id " + serviceId));
-
-                reservation.setCustomer(customer);
-                reservation.setService(service);
-
-                // Guardar la reserva actualizada
-                Reservation updatedReservation = reservationRepository.save(reservation);
-                return ResponseEntity.ok().body(updatedReservation);
-            })
-            .orElseThrow(() -> new RuntimeException("Reservation not found with id " + id));
-}
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        return reservationRepository.findById(id)
-                .map(reservation -> {
-                    reservationRepository.delete(reservation);
-                    return ResponseEntity.noContent().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+        reservationRepository.delete(reservation);
+        return ResponseEntity.noContent().build();
     }
 }

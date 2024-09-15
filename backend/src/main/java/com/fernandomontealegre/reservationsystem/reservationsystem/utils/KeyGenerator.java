@@ -1,9 +1,12 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.utils;
 
-import io.jsonwebtoken.security.Keys;
+// Importaciones de JWT
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
+// Importaciones de Java
 import java.util.Base64;
+
 
 public class KeyGenerator {
     public static void main(String[] args) {
