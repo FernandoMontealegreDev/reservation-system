@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Component
-@Profile("dev")
+@Profile("prod")
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired
