@@ -1,20 +1,19 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.utils;
 
-// Importaciones de modelos y repositorios
 import com.fernandomontealegre.reservationsystem.reservationsystem.model.*;
 import com.fernandomontealegre.reservationsystem.reservationsystem.repository.*;
 
-// Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
-// Importaciones de Java
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Component
+@Profile("dev")
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired

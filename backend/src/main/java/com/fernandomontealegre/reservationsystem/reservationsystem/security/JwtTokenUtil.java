@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.security.Key;
 import java.util.Date;
@@ -17,7 +18,8 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    private String secret = ""; // Clave secreta generada en Base64
+    @Value("${jwt.secret}")
+    private String secret;
 
     // Validez del token en milisegundos (5 horas)
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
