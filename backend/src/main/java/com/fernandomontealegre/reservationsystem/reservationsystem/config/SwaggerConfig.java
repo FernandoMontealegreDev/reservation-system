@@ -22,4 +22,5 @@ public class SwaggerConfig {
                         .description("Full API Documentation")
                         .url("https://github.com/your-repo"));
     }
+
 }
