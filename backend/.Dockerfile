@@ -1,35 +1,24 @@
-# Usa una imagen de Maven oficial para construir el proyecto
-FROM maven:3.8.6-eclipse-temurin-17 AS build
-
-# Establece el directorio de trabajo
+# Etapa 1: Construcción
+FROM maven:3.8.7-openjdk-17 AS build
 WORKDIR /app
 
-# Copia el archivo de configuración de Maven
-COPY pom.xml .
-
-# Descarga las dependencias definidas en el pom.xml
+# Copiar el archivo pom.xml y descargar las dependencias
+COPY pom.xml ./
 RUN mvn dependency:go-offline
 
-# Copia el código fuente del proyecto
+# Copiar el código fuente y compilar el proyecto
 COPY src ./src
-
-# Construye el proyecto con Maven
 RUN mvn clean package -DskipTests
 
-# Usa una imagen de Java oficial para ejecutar la aplicación
-FROM eclipse-temurin:17-jdk-alpine
-
-# Establece el directorio de trabajo
+# Etapa 2: Ejecución
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 
-# Copia el JAR construido desde la fase de construcción
+# Copiar el archivo JAR desde la etapa de construcción
 COPY --from=build /app/target/reservationsystem-0.0.1-SNAPSHOT.jar app.jar
 
-# Expone el puerto en el que se ejecuta la aplicación
+# Exponer el puerto
 EXPOSE 8080
 
-# Variable de entorno para pasar el perfil activo
-ENV SPRING_PROFILES_ACTIVE=prod
-
-# Comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "app.jar"]
