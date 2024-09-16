@@ -47,7 +47,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/v3/api-docs/**", "/swagger-ui/**").permitAll() // Permitir estos endpoints sin autenticación
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh-token", "/v3/api-docs/**", "/swagger-ui/**").permitAll() // Permitir estos endpoints sin autenticación
                 .requestMatchers("/admin/**").hasRole("ADMIN") // Permitir solo a usuarios con el rol "ADMIN"
                 .anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
             )

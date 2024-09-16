@@ -2,8 +2,11 @@ package com.fernandomontealegre.reservationsystem.reservationsystem.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
@@ -11,14 +14,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-
 @Component
 public class JwtTokenUtil {
 
-    private String secret = ""; // Reemplaza por la clave generada en Base64 con KeyGenerator
+    private String secret = ""; // Clave secreta generada en Base64
 
     // Validez del token en milisegundos (5 horas)
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
@@ -55,21 +54,26 @@ public class JwtTokenUtil {
         return expiration.before(new Date());
     }
 
-    // Generar token para el usuario
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        // Puedes agregar más información al token si lo deseas
-        return doGenerateToken(claims, userDetails.getUsername());
-    }
-
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
+    // Método para configurar claims comunes (issuedAt, expiration, etc.)
+    private JwtBuilder buildToken(Claims claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512);
+    }
+
+    // Generar token para el usuario
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        return buildToken(Jwts.claims(claims), userDetails.getUsername()).compact();
+    }
+
+    // Refrescar el token
+    public String refreshToken(String token) {
+        final Claims claims = getAllClaimsFromToken(token);
+        return buildToken(claims, claims.getSubject()).compact();
     }
 
     // Validar token
@@ -82,17 +86,4 @@ public class JwtTokenUtil {
     public Boolean canTokenBeRefreshed(String token) {
         return !isTokenExpired(token);
     }
-
-    // Refrescar el token
-    public String refreshToken(String token) {
-        final Claims claims = getAllClaimsFromToken(token);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(claims.getSubject())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
-    }
-
 }

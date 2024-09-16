@@ -40,7 +40,7 @@ public class HotelRoomController {
         return ResponseEntity.ok(hotelRoom);
     }
 
-    @Operation(summary = "Crear una nueva habitación")
+    @Operation(summary = "Crear una nueva habitación (solo para administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<HotelRoom> createHotelRoom(@Valid @RequestBody HotelRoom hotelRoom) {
@@ -48,7 +48,7 @@ public class HotelRoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedHotelRoom);
     }
 
-    @Operation(summary = "Actualizar una habitación")
+    @Operation(summary = "Actualizar una habitación (solo para administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<HotelRoom> updateHotelRoom(@PathVariable Long id, @Valid @RequestBody HotelRoom hotelRoomDetails) {
@@ -64,7 +64,7 @@ public class HotelRoomController {
         return ResponseEntity.ok(updatedHotelRoom);
     }
 
-    @Operation(summary = "Eliminar una habitación")
+    @Operation(summary = "Eliminar una habitación (solo para administradores)")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteHotelRoom(@PathVariable Long id) {

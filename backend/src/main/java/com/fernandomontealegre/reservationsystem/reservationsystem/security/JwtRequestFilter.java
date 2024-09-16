@@ -18,9 +18,7 @@ import org.springframework.lang.NonNull;
 import io.jsonwebtoken.ExpiredJwtException;
 
 import java.io.IOException;
-import java.util.Arrays; 
 import java.util.List;
-
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -32,11 +30,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     // Rutas que no requieren autenticación
-    private static final List<String> NON_SECURED_PATHS = Arrays.asList(
+    private static final List<String> NON_SECURED_PATHS = List.of(
         "/api/auth/register",
         "/api/auth/login",
-        "/v3/api-docs/**",   // Swagger OpenAPI docs
-        "/swagger-ui/**"     // Swagger UI
+        "/api/auth/refresh-token",
+        "/v3/api-docs",
+        "/swagger-ui"
     );
 
     @Override
@@ -45,14 +44,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String requestPath = request.getServletPath();
 
-        // Ignorar las rutas que no necesitan autenticación
-        if (NON_SECURED_PATHS.contains(requestPath)) {
+        // Verificar si la ruta es no protegida usando una comprobación más flexible
+        if (isNonSecuredPath(requestPath)) {
             chain.doFilter(request, response);
             return;
         }
 
         final String requestTokenHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwtToken = null;
 
@@ -87,4 +85,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
+    // Método para verificar si una ruta es no protegida usando coincidencias flexibles
+    private boolean isNonSecuredPath(String requestPath) {
+        return NON_SECURED_PATHS.stream().anyMatch(requestPath::startsWith);
+    }
 }
