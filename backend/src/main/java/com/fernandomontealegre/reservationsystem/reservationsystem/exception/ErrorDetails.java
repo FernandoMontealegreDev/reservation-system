@@ -1,11 +1,7 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.exception;
 
-// Importaciones de Lombok
 import lombok.*;
-
-// Importaciones de Java
 import java.util.Date;
-
 
 @Data
 @AllArgsConstructor

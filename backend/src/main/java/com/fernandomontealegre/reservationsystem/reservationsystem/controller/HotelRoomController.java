@@ -1,42 +1,46 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.controller;
 
-// Importaciones relacionadas con el modelo y repositorio
 import com.fernandomontealegre.reservationsystem.reservationsystem.model.HotelRoom;
 import com.fernandomontealegre.reservationsystem.reservationsystem.repository.HotelRoomRepository;
+import com.fernandomontealegre.reservationsystem.reservationsystem.exception.ResourceNotFoundException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
-// Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-// Importaciones de Jakarta Validation y Java
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
-
 
 @RestController
 @RequestMapping("/api/hotel-rooms")
+@Tag(name = "Hotel Room Controller", description = "Endpoints para la gestión de habitaciones de hotel")
 public class HotelRoomController {
 
     @Autowired
     private HotelRoomRepository hotelRoomRepository;
 
-    // Todos los usuarios pueden ver las habitaciones
+    @Operation(summary = "Obtener todas las habitaciones")
     @GetMapping
-    public List<HotelRoom> getAllHotelRooms() {
-        return hotelRoomRepository.findAll();
+    public ResponseEntity<List<HotelRoom>> getAllHotelRooms() {
+        List<HotelRoom> rooms = hotelRoomRepository.findAll();
+        if (rooms.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(rooms);
     }
 
+    @Operation(summary = "Obtener una habitación por ID")
     @GetMapping("/{id}")
     public ResponseEntity<HotelRoom> getHotelRoomById(@PathVariable Long id) {
-        return hotelRoomRepository.findById(id)
-                .map(room -> ResponseEntity.ok().body(room))
-                .orElse(ResponseEntity.notFound().build());
+        HotelRoom hotelRoom = hotelRoomRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
+        return ResponseEntity.ok(hotelRoom);
     }
 
-    // Solo admins pueden crear, actualizar y eliminar habitaciones
+    @Operation(summary = "Crear una nueva habitación")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<HotelRoom> createHotelRoom(@Valid @RequestBody HotelRoom hotelRoom) {
@@ -44,32 +48,30 @@ public class HotelRoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedHotelRoom);
     }
 
+    @Operation(summary = "Actualizar una habitación")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<HotelRoom> updateHotelRoom(@PathVariable Long id, @Valid @RequestBody HotelRoom hotelRoomDetails) {
-        return hotelRoomRepository.findById(id)
-                .map(hotelRoom -> {
-                    hotelRoom.setRoomNumber(hotelRoomDetails.getRoomNumber());
-                    hotelRoom.setDescription(hotelRoomDetails.getDescription());
-                    hotelRoom.setPrice(hotelRoomDetails.getPrice());
-                    hotelRoom.setRoomType(hotelRoomDetails.getRoomType());
-                    HotelRoom updatedHotelRoom = hotelRoomRepository.save(hotelRoom);
-                    return ResponseEntity.ok().body(updatedHotelRoom);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        HotelRoom hotelRoom = hotelRoomRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
+
+        hotelRoom.setRoomNumber(hotelRoomDetails.getRoomNumber());
+        hotelRoom.setDescription(hotelRoomDetails.getDescription());
+        hotelRoom.setPrice(hotelRoomDetails.getPrice());
+        hotelRoom.setRoomType(hotelRoomDetails.getRoomType());
+
+        HotelRoom updatedHotelRoom = hotelRoomRepository.save(hotelRoom);
+        return ResponseEntity.ok(updatedHotelRoom);
     }
 
+    @Operation(summary = "Eliminar una habitación")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHotelRoom(@PathVariable Long id) {
-        Optional<HotelRoom> optionalHotelRoom = hotelRoomRepository.findById(id);
-        if (optionalHotelRoom.isPresent()) {
-            hotelRoomRepository.delete(optionalHotelRoom.get());
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<String> deleteHotelRoom(@PathVariable Long id) {
+        HotelRoom hotelRoom = hotelRoomRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
+
+        hotelRoomRepository.delete(hotelRoom);
+        return ResponseEntity.ok("Habitación eliminada con éxito");
     }
-
-
 }

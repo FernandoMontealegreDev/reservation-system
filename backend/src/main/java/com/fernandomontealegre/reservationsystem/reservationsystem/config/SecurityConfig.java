@@ -1,11 +1,9 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.config;
 
-// Importaciones relacionadas con la seguridad
 import com.fernandomontealegre.reservationsystem.reservationsystem.security.CustomUserDetailsService;
 import com.fernandomontealegre.reservationsystem.reservationsystem.security.JwtAuthenticationEntryPoint;
 import com.fernandomontealegre.reservationsystem.reservationsystem.security.JwtRequestFilter;
 
-// Importaciones de Spring Framework y Spring Security
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +47,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // Permitir estos endpoints sin autenticación
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/v3/api-docs/**", "/swagger-ui/**").permitAll() // Permitir estos endpoints sin autenticación
                 .requestMatchers("/admin/**").hasRole("ADMIN") // Permitir solo a usuarios con el rol "ADMIN"
                 .anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
             )

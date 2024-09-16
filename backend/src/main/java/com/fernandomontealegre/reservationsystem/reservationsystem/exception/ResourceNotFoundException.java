@@ -1,6 +1,5 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.exception;
 
-// Importaciones de Spring Framework
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 

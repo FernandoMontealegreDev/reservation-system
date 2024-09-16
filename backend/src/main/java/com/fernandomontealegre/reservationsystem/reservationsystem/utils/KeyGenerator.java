@@ -1,10 +1,8 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.utils;
 
-// Importaciones de JWT
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
-// Importaciones de Java
 import java.util.Base64;
 
 

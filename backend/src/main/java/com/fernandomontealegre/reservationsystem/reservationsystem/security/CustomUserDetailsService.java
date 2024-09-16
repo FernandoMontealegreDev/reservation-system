@@ -1,9 +1,7 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.security;
 
-// Importaciones de repositorios
 import com.fernandomontealegre.reservationsystem.reservationsystem.repository.UserRepository;
 
-// Importaciones de Spring Security
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

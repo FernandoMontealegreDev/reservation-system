@@ -1,6 +1,5 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.exception;
 
-// Importaciones de Spring Framework
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -8,7 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 
-// Importaciones de Java
 import java.util.*;
 
 @RestControllerAdvice

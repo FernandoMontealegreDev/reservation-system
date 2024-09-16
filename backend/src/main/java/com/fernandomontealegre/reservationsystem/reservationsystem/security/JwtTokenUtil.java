@@ -1,19 +1,16 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.security;
 
-// Importaciones de JWT
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
-// Importaciones de Java
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-// Importaciones de Spring Framework
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +55,7 @@ public class JwtTokenUtil {
         return expiration.before(new Date());
     }
 
-// Generar token para el usuario
+    // Generar token para el usuario
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         // Puedes agregar más información al token si lo deseas
@@ -80,4 +77,22 @@ public class JwtTokenUtil {
         final String usernameFromToken = getUsernameFromToken(token);
         return (usernameFromToken.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
+    // Verificar si el token puede ser refrescado
+    public Boolean canTokenBeRefreshed(String token) {
+        return !isTokenExpired(token);
+    }
+
+    // Refrescar el token
+    public String refreshToken(String token) {
+        final Claims claims = getAllClaimsFromToken(token);
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(claims.getSubject())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
 }
