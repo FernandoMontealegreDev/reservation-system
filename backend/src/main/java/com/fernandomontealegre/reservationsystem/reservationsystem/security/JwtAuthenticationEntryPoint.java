@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -20,10 +20,17 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        // Registrar advertencia
-        logger.warn("Intento de acceso no autorizado: {}", authException.getMessage());
+        // Registrar intento de acceso no autorizado con detalles adicionales de la solicitud
+        logger.warn("Intento de acceso no autorizado: URI - {}, Mensaje - {}", request.getRequestURI(), authException.getMessage());
         
-        // Responder con 401 No autorizado
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No autorizado");
+        // Establecer el estado de la respuesta a 401 No autorizado
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+
+        // Respuesta de error personalizada en formato JSON
+        PrintWriter writer = response.getWriter();
+        writer.write("{\"error\": \"No autorizado\", \"mensaje\": \"" + authException.getMessage() + "\"}");
+        writer.flush();
+        writer.close();
     }
 }

@@ -1,9 +1,6 @@
 package com.fernandomontealegre.reservationsystem.reservationsystem.security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -26,10 +23,14 @@ public class JwtTokenUtil {
 
     // Crear un objeto Key a partir de la clave secreta
     private Key getSigningKey() {
+        // Validación de la longitud de la clave secreta
+        if (secret.length() < 32) {
+            throw new IllegalArgumentException("La clave secreta debe tener al menos 32 caracteres para HS512.");
+        }
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // Obtener el username del token JWT
+    // Obtener el nombre de usuario del token JWT
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
@@ -47,7 +48,17 @@ public class JwtTokenUtil {
 
     // Para obtener información del token necesitamos la clave secreta
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("El token JWT ha expirado", e);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new RuntimeException("Error al analizar el token JWT", e);
+        }
     }
 
     // Verificar si el token ha expirado

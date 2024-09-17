@@ -30,6 +30,7 @@ public class User implements UserDetails {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Column(nullable = false)
+    @ToString.Exclude
     @Schema(description = "Contraseña del usuario", example = "password123")
     private String password;
 
@@ -46,7 +47,19 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Schema(description = "Rol del usuario", example = "CLIENT")
-    private Role role;
+    private RoleType role;
+
+    @Column(name = "account_non_expired")
+    private boolean accountNonExpired = true;
+
+    @Column(name = "account_non_locked")
+    private boolean accountNonLocked = true;
+
+    @Column(name = "credentials_non_expired")
+    private boolean credentialsNonExpired = true;
+
+    @Column(name = "enabled")
+    private boolean enabled = true;
 
     // Implementación de UserDetails
     @Override
@@ -56,21 +69,30 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return accountNonExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return credentialsNonExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
+    }
+
+    // Métodos auxiliares
+    public boolean isAdmin() {
+        return role == RoleType.ADMIN;
+    }
+
+    public boolean isClient() {
+        return role == RoleType.CLIENT;
     }
 }
